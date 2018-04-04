@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'meteor-rx-server',
+  name: 'apatryda:meteor-rx-server',
   version: '0.0.1',
   // Brief, one-line summary of the package.
   summary: '',
@@ -10,8 +10,12 @@ Package.describe({
   documentation: 'README.md'
 });
 
+Npm.depends({
+  rxjs: '5.5.8',
+});
+
 Package.onUse(function(api) {
-  api.versionsFrom('1.6.1');
+  api.versionsFrom('1.6');
   api.use('ecmascript');
   api.mainModule('meteor-rx-server.js');
 });
