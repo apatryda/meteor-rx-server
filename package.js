@@ -23,6 +23,6 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use('ecmascript');
   api.use('tinytest');
-  api.use('meteor-rx-server');
+  api.use('apatryda:meteor-rx-server');
   api.mainModule('meteor-rx-server-tests.js');
 });
