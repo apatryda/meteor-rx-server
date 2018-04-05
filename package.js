@@ -2,7 +2,7 @@ Package.describe({
   name: 'apatryda:meteor-rx-server',
   version: '0.0.1',
   // Brief, one-line summary of the package.
-  summary: '',
+  summary: 'RxJs wrapper over MongoDb access, server code',
   // URL to the Git repository containing the source code for this package.
   git: 'git@github.com:apatryda/meteor-rx-server.git',
   // By default, Meteor will default to using README.md for documentation.
