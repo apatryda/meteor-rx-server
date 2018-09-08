@@ -1,1 +1,1 @@
-An rxjs wrapper over Meteor Mongo collection.
+An RxJs wrapper over Meteor Mongo collections.
