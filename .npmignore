@@ -1,4 +1,6 @@
+server
 src
 .editorconfig
 .gitignore
+.meteor
 .npmignore
