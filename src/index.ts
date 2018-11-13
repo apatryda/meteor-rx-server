@@ -2,14 +2,14 @@ import { Observable, Observer, Subject } from 'rxjs';
 
 export interface ObservableObserveCallbacks<
   T,
-  Initial = T[],
-  Added = T,
-  AddedAt = any,
-  Changed = T,
-  ChangedAt = any,
-  Removed = any,
-  RemovedAt = any,
-  MovedTo = any,
+  Initial = never,
+  Added = never,
+  AddedAt = never,
+  Changed = never,
+  ChangedAt = never,
+  Removed = never,
+  RemovedAt = never,
+  MovedTo = never,
 > {
   initial?(documents: T[]): Observable<Initial>;
   added?(document: T): Observable<Added>;
@@ -62,15 +62,25 @@ export class ObservableCursor<T> {
   ));
 
   protected _observe: <
-    Initial = any,
-    Added = any,
-    AddedAt = any,
-    Changed = any,
-    ChangedAt = any,
-    Removed = any,
-    RemovedAt = any,
-    MovedTo = any,
-  >(callbacks: ObservableObserveCallbacks<T>) => Observable<Observable<
+    Initial = never,
+    Added = never,
+    AddedAt = never,
+    Changed = never,
+    ChangedAt = never,
+    Removed = never,
+    RemovedAt = never,
+    MovedTo = never,
+  >(callbacks: ObservableObserveCallbacks<
+    T,
+    Initial,
+    Added,
+    AddedAt,
+    Changed,
+    ChangedAt,
+    Removed,
+    RemovedAt,
+    MovedTo
+  >) => Observable<Observable<
     Initial
     | Added
     | AddedAt
@@ -225,15 +235,25 @@ export class ObservableCursor<T> {
   }
 
   observe<
-    Initial = void,
-    Added = void,
-    AddedAt = void,
-    Changed = void,
-    ChangedAt = void,
-    Removed = void,
-    RemovedAt = void,
-    MovedTo = void,
-  >(callbacks: ObservableObserveCallbacks<T>): Observable<
+    Initial = never,
+    Added = never,
+    AddedAt = never,
+    Changed = never,
+    ChangedAt = never,
+    Removed = never,
+    RemovedAt = never,
+    MovedTo = never,
+  >(callbacks: ObservableObserveCallbacks<
+    T,
+    Initial,
+    Added,
+    AddedAt,
+    Changed,
+    ChangedAt,
+    Removed,
+    RemovedAt,
+    MovedTo
+  >): Observable<
     Initial
     | Added
     | AddedAt
