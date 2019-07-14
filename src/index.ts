@@ -1,15 +1,15 @@
-import 'rxjs';
-import { Observable, ObservableInput } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
-import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/observable/bindNodeCallback';
-import 'rxjs/add/observable/defer';
-import 'rxjs/add/observable/empty';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/switch';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/takeUntil';
+import {
+  Observable,
+  ObservableInput,
+  Observer,
+  Subject,
+  bindNodeCallback,
+  defer,
+  empty,
+  from,
+  of,
+} from 'rxjs';
+import { switchAll, switchMap, takeUntil } from 'rxjs/operators';
 
 interface BindMeteorEnvironmentFn {
   <A1 = any>(fn: (a1: A1) => any): (a1: A1) => void;
@@ -243,7 +243,7 @@ const Wrappers: {
       }
       callback(null, cursor);
     })),
-    findOne: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    findOne: <any>bindNodeCallback(Utils.bindMeteorEnvironment((
       collection: Mongo.Collection<any>,
       ...args: any[]
     ) => {
@@ -257,7 +257,7 @@ const Wrappers: {
       }
       callback(null, document);
     })),
-    insert: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    insert: <any>bindNodeCallback(Utils.bindMeteorEnvironment((
       collection: Mongo.Collection<any>,
       document: any,
       callback: Function,
@@ -271,7 +271,7 @@ const Wrappers: {
       }
       callback(null, _id);
     })),
-    remove: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    remove: <any>bindNodeCallback(Utils.bindMeteorEnvironment((
       collection: Mongo.Collection<any>,
       selector: Mongo.Selector<any> | Mongo.ObjectID | string,
       callback: Function,
@@ -285,7 +285,7 @@ const Wrappers: {
       }
       callback(null, changes);
     })),
-    update: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    update: <any>bindNodeCallback(Utils.bindMeteorEnvironment((
       collection: Mongo.Collection<any>,
       selector: Mongo.Selector<any> | Mongo.ObjectID | string,
       modifier: Mongo.Modifier<any>,
@@ -301,7 +301,7 @@ const Wrappers: {
       }
       callback(null, numberAffected);
     })),
-    upsert: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    upsert: <any>bindNodeCallback(Utils.bindMeteorEnvironment((
       collection: Mongo.Collection<any>,
       selector: Mongo.Selector<any> | Mongo.ObjectID | string,
       modifier: Mongo.Modifier<any>,
@@ -322,7 +322,7 @@ const Wrappers: {
     })),
   },
   Cursor: {
-    count: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    count: <any>bindNodeCallback(Utils.bindMeteorEnvironment((
       cursorPromise: Promise<Mongo.Cursor<any>>,
       ...args: any[]
     ) => {
@@ -337,7 +337,7 @@ const Wrappers: {
       }
       callback(null, count);
     })),
-    fetch: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    fetch: bindNodeCallback(Utils.bindMeteorEnvironment((
       cursorPromise: Promise<Mongo.Cursor<any>>,
       callback: Function,
     ) => {
@@ -351,7 +351,7 @@ const Wrappers: {
       }
       callback(null, result);
     })),
-    observe: Observable.bindNodeCallback(Utils.bindMeteorEnvironment((
+    observe: bindNodeCallback(Utils.bindMeteorEnvironment((
       cursorPromise: Promise<Mongo.Cursor<any>>,
       {
         initial,
@@ -387,17 +387,15 @@ const Wrappers: {
                 if (initialDocuments) {
                   initialDocuments.push(document);
                 } else if (added) {
-                  Observable
-                    .defer(() => {
-                      const result = added(document);
-                      return result
-                        ? Observable.from(result)
-                        : Observable.empty()
-                      ;
-                    })
-                    .takeUntil(finish$)
-                    .subscribe(observerProxy)
-                  ;
+                  defer((): ObservableInput<any> => {
+                    const result = added(document);
+                    return result
+                      ? from(result)
+                      : empty()
+                    ;
+                  }).pipe(
+                    takeUntil(finish$)
+                  ).subscribe(observerProxy);
                 }
               }
               : undefined
@@ -407,116 +405,102 @@ const Wrappers: {
                 if (initialDocuments) {
                   initialDocuments.splice(atIndex, 0, document);
                 } else {
-                  Observable
-                    .defer(() => {
-                      const result = addedAt(document, atIndex, before);
-                      return result
-                        ? Observable.from(result)
-                        : Observable.empty()
-                      ;
-                    })
-                    .takeUntil(finish$)
-                    .subscribe(observerProxy)
-                  ;
+                  defer(() => {
+                    const result = addedAt(document, atIndex, before);
+                    return result
+                      ? from(result)
+                      : empty()
+                    ;
+                  }).pipe(
+                    takeUntil(finish$)
+                  ).subscribe(observerProxy);
                 }
               }
               : undefined
             ,
             changed: changed
               ? (newDocument: any, oldDocument: any) => {
-                Observable
-                  .defer(() => {
-                    const result = changed(newDocument, oldDocument);
-                    return result
-                      ? Observable.from(result)
-                      : Observable.empty()
-                    ;
-                  })
-                .takeUntil(finish$)
-                  .subscribe(observerProxy)
-                ;
+                defer(() => {
+                  const result = changed(newDocument, oldDocument);
+                  return result
+                    ? from(result)
+                    : empty()
+                  ;
+                }).pipe(
+                  takeUntil(finish$)
+                ).subscribe(observerProxy);
               }
               : undefined
             ,
             changedAt: changedAt
               ? (newDocument: any, oldDocument: any, indexAt: number) => {
-                Observable
-                .defer(() => {
+                defer(() => {
                   const result = changedAt(newDocument, oldDocument, indexAt);
                   return result
-                    ? Observable.from(result)
-                    : Observable.empty()
+                    ? from(result)
+                    : empty()
                   ;
-                })
-            .takeUntil(finish$)
-                .subscribe(observerProxy)
-                ;
+                }).pipe(
+                  takeUntil(finish$)
+                ).subscribe(observerProxy);
               }
               : undefined
             ,
             removed: removed
               ? (oldDocument: any) => {
-                Observable
-                  .defer(() => {
-                    const result = removed(oldDocument);
-                    return result
-                      ? Observable.from(result)
-                      : Observable.empty()
-                    ;
-                  })
-                .takeUntil(finish$)
-                  .subscribe(observerProxy)
-                ;
+                defer(() => {
+                  const result = removed(oldDocument);
+                  return result
+                    ? from(result)
+                    : empty()
+                  ;
+                }).pipe(
+                  takeUntil(finish$)
+                ).subscribe(observerProxy);
               }
               : undefined
             ,
             removedAt: removedAt
               ? (oldDocument: any, atIndex: number) => {
-                Observable
-                  .defer(() => {
-                    const result = removedAt(oldDocument, atIndex);
-                    return result
-                      ? Observable.from(result)
-                      : Observable.empty()
-                    ;
-                  })
-                .takeUntil(finish$)
-                  .subscribe(observerProxy)
-                ;
+                defer(() => {
+                  const result = removedAt(oldDocument, atIndex);
+                  return result
+                    ? from(result)
+                    : empty()
+                  ;
+                }).pipe(
+                  takeUntil(finish$))
+                .subscribe(observerProxy);
               }
               : undefined
             ,
             movedTo: movedTo
               ? (document: any, fromIndex: number, toIndex: number, before: any) => {
-                Observable
-                  .defer(() => {
-                    const result = movedTo(document, fromIndex, toIndex, before);
-                    return result
-                      ? Observable.from(result)
-                      : Observable.empty()
-                    ;
-                  })
-                .takeUntil(finish$)
-                  .subscribe(observerProxy)
-                ;
+                defer(() => {
+                  const result = movedTo(document, fromIndex, toIndex, before);
+                  return result
+                    ? from(result)
+                    : empty()
+                  ;
+                }).pipe(
+                  takeUntil(finish$)
+                ).subscribe(observerProxy);
               }
               : undefined
             ,
           });
 
           if (initial) {
-            Observable
-              .of(initialDocuments)
-              .switchMap((documents) => {
+            of(initialDocuments).pipe(
+              switchMap((documents) => {
                 const result = initial(documents);
                 return result
-                  ? Observable.from(result)
-                  : Observable.empty()
+                  ? from(result)
+                  : empty()
                 ;
-              })
-              .takeUntil(finish$)
-              .subscribe(observerProxy)
-            ;
+              }),
+              takeUntil(finish$)
+            ).subscribe(observerProxy);
           }
 
           initialDocuments = null;
@@ -580,7 +564,9 @@ export class ObservableCursor<T> {
     | RemovedAt
     | MovedTo
   > {
-    return Wrappers.Cursor.observe(this.cursor, callbacks).switch();
+    return Wrappers.Cursor.observe(this.cursor, callbacks).pipe(
+      switchAll()
+    );
   }
 }
 
